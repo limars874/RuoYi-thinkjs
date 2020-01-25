@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>模拟下单支付界面</title>
+	</head>
+	<body>
+		<h1>第一步：创建订单</h1>
+		<table>
+			<tr>
+				<td>购买周期：</td>
+				<td>
+					<input type="text" />
+				</td>
+			</tr>
+			<tr>
+				<td>购买数量：</td>
+				<td>
+					<input type="text" />
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<button>提交订单</button>
+				</td>
+			</tr>
+		</table>
+		<hr />		
+		<h1>第二步：选择支付</h1>
+		<table>
+			<tr>
+				<td>订单SN：</td>
+				<td>
+					<input type="text" />
+				</td>
+			</tr>
+			<tr>
+				<td>支付平台：</td>
+				<td>
+					<input type="text" value="wxmp" />
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<button>发起支付</button>
+				</td>
+			</tr>
+		</table>
+		<hr />		
+		<h1>第三步：查询支付结果</h1>
+		<table>
+			<tr>
+				<td>paymentSN(自动填写)：</td>
+				<td>
+					<input type="text" placeholder="自动生成" readonly="readonly" />
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<button>查询</button>
+				</td>
+			</tr>
+		</table>
+		<h4>查询结果：</h4>
+		<div id="result"></div>
+		<hr />		
+		
+	</body>
+</html>
