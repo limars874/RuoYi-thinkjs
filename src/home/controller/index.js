@@ -19,7 +19,7 @@ export default class extends Base {
   }
 
   async login(username, password, code, uuid) {
-    const verifyKey = `${think.config('CAPTCHA_CODE_KEY')}:${uuid}`
+    const verifyKey = `${think.config('CAPTCHA_CODE_KEY')}${uuid}`
     const captcha = await GRedis.get(verifyKey)
     // todo 恢复
     // await GRedis.del(verifyKey)
@@ -51,7 +51,8 @@ export default class extends Base {
     }
     // todo 记录登录日志到sys_logininfor
     // todo 生成jwt token
-    const token = 123
+    const tokenService = new (think.service('Token'))
+    const token = await tokenService.createToken({ user })
     this.res({ token })
 
 
@@ -70,7 +71,7 @@ export default class extends Base {
     const verifyCode = `"${token}"`
     // 唯一标识
     const uuid = Uuid.v1().replace(/\-/g, '');
-    const verifyKey = `${think.config('CAPTCHA_CODE_KEY')}:${uuid}`
+    const verifyKey = `${think.config('CAPTCHA_CODE_KEY')}${uuid}`
     // 设置redis
     await GRedis.set(verifyKey, verifyCode, 'EX', think.config('CAPTCHA_EXPIRATION'))
 

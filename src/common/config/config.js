@@ -13,8 +13,17 @@ export default {
     host: '192.168.50.219',
     extend: {}
   },
-  CAPTCHA_CODE_KEY: 'captcha_codes', // 验证码 redis key
+  CAPTCHA_CODE_KEY: 'captcha_codes:', // 验证码 redis key
   CAPTCHA_EXPIRATION: 120, // 验证码有效期（秒）
+
+  LOGIN_TOKEN_KEY: 'login_tokens:',
+  LOGIN_USER_KEY: 'login_user_key',
+  token: {
+    tokenHeader: 'Authorization', // 令牌自定义标识
+    tokenSecret: 'abcdefghijklmnopqrstuvwxyz', // 令牌秘钥
+    tokenExpireTime: 30 // token有效期，分钟，默认30分钟
+  },
+
 
   _DEBUG_: false, // 是否开启微信调试模式，可线下模拟用户
   wechat_from_sql: false, // 是否从数据库获取微信公众号信息,如果false，那么以下面wechat属性的配置为公众号信息
@@ -24,11 +33,6 @@ export default {
     'api/authwechat/GET',
   ], // 白名单, 给授权使用
 
-  user_white_actions: [
-    'api/user/mploginPOST',
-    'api/user/login_keyPOST',
-    'api/user/upload_imgPOST',
-  ],// 白名单，给小程序user注册登录用
 
   log_error: false, //是否打印错误日志
   log_request: true, //是否打印请求的日志
