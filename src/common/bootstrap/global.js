@@ -32,8 +32,8 @@ var http = require('http')
  * @param {Object} color
  */
 think.debugLog = function (msg, color) {
-  const isDebug = think.config('setup.IS_DEBUG') === '1'  || false
-  if(think.env !== 'development' && !isDebug){
+  const isDebug = think.config('setup.IS_DEBUG') === '1' || false
+  if (think.env !== 'development' && !isDebug) {
     return
   }
   if (!typeof msg === 'string') {
@@ -62,6 +62,11 @@ think.infoLog = function (msg, color) {
 global.showErrooByCode = function (code) {
   let result = think.config('error', undefined, 'api')[code]
   return result ? result : think.config('error', undefined, 'api')[10000]
+}
+
+global.showErrorByEnum = function (enumCode) {
+  let enumConfig = think.config('resEnum', undefined, 'home')
+  return enumConfig['property'][enumCode]['msg'] || '未知错误'
 }
 
 

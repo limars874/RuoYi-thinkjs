@@ -26,6 +26,14 @@ export default class extends think.controller.rest {
     return super.fail(code, showErrooByCode(code), {})
   }
 
+  failByEnum(enumNum) {
+    return super.fail(500, showErrorByEnum(enumNum), undefined)
+  }
+
+  failByMsg(msg) {
+    return super.fail(500, msg, undefined)
+  }
+
 
   async __before() {
   }
@@ -55,9 +63,10 @@ export default class extends think.controller.rest {
       this.success(result)
     } catch (e) {
       if (think.isNumber(e)) {
-        return this.failByCode(e)
+        return this.failByEnum(e)
       } else {
-        return this.fail(10000, '未知错误：' + e.toString())
+        return this.failByMsg(e.toString())
+        // return this.fail(10000, '未知错误：' + e.toString())
       }
     }
   }

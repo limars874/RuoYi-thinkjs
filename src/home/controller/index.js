@@ -4,7 +4,9 @@ import Uuid from "uuid";
 import captcha from 'trek-captcha'
 import sharp from 'sharp'
 import bcrypt from "bcryptjs"
-
+import uaParser from "ua-parser-js"
+import snakecaseKeys from 'snakecase-keys'
+import resEnum from '../config/resEnum'
 
 export default class extends Base {
 
@@ -18,44 +20,83 @@ export default class extends Base {
 
   }
 
+
   async login(username, password, code, uuid) {
     const verifyKey = `${think.config('CAPTCHA_CODE_KEY')}${uuid}`
     const captcha = await GRedis.get(verifyKey)
-    // todo 恢复
-    // await GRedis.del(verifyKey)
+    await GRedis.del(verifyKey)
     if (!captcha) {
-      // todo 记录登录日志到sys_logininfor
-      this.fail(500, '验证码已失效')
-      return
+      this.saveLoginInfo(username, this, false, '验证码已失效').then()
+      throw resEnum.userCaptchaExpire
     }
     think.debugLog(`code是${code.toLowerCase()},captcha是${captcha.toLowerCase()}`)
     if (`"${code.toLowerCase()}"` !== captcha.toLowerCase()) {
-      // todo 记录登录日志到sys_logininfor
-      this.fail(500, '验证码错误')
-      return
+      this.saveLoginInfo(username, this, false, '验证码错误').then()
+      throw resEnum.userCaptchaError
     }
     // 用户验证
     const user = await this.model('sys_user').where({ user_name: username }).find();
     if (!user.user_id) {
-      this.fail(500, `登录用户：${username}不存在`)
+      this.saveLoginInfo(username, this, false, `登录用户：${username}不存在`).then()
+      throw `登录用户：${username}不存在`
     }
     if (user.del_flag === 2) {
-      this.fail(500, `对不起，您的账号：${user.user_name}已被删除`)
+      this.saveLoginInfo(username, this, false, `对不起，您的账号：${username}已被删除`).then()
+      throw `对不起，您的账号：${username}已被删除`
     }
     if (user.status === 1) {
-      this.fail(500, `对不起，您的账号：${user.user_name}已被停用`)
+      this.saveLoginInfo(username, this, false, `对不起，您的账号：${username}已被停用`).then()
+      throw `对不起，您的账号：${username}已被停用`
     }
     const isRightPass = await bcrypt.compare(password, user.password);
     if (!isRightPass) {
-      this.fail(500, `用户不存在/密码错误`)
+      this.saveLoginInfo(username, this, false, '用户不存在/密码错误').then()
+      throw resEnum.userPasswordNotMatch
     }
-    // todo 记录登录日志到sys_logininfor
-    // todo 生成jwt token
+    this.saveLoginInfo(username, this, true, '登录成功').then()
     const tokenService = new (think.service('Token'))
-    const token = await tokenService.createToken({ user })
+    const token = await tokenService.createToken({ user }, this)
     this.res({ token })
+  }
 
 
+  /**
+   * 记录登录日志
+   * @param userName
+   * @param controller
+   * @param isSuccess
+   * @param msg
+   * @returns {Promise<void>}
+   */
+  async saveLoginInfo(userName, controller, isSuccess, msg) {
+    const ipaddr = controller.ip();
+    const header = controller.header('user-agent')
+    const ua = uaParser(header)
+    let loginLocation
+    if (ipaddr === '127.0.0.1') {
+      loginLocation = '内网ip'
+    } else {
+      const iPService = new (think.service('IpKit'))
+      const res = await iPService.getIpLocation(ipaddr)
+      if (res) {
+        loginLocation = res
+      } else {
+        loginLocation = '未知地区'
+      }
+    }
+    const browser = ua.browser.name ? ua.browser.name + ' ' + ua.browser.version : 'unknown'
+    const os = ua.os.name ? ua.os.name + ' ' + ua.os.version : 'unknown'
+    const data = snakecaseKeys({
+      userName,
+      ipaddr,
+      loginLocation,
+      browser,
+      os,
+      status: isSuccess ? 0 : 1,
+      msg,
+      login_time: think.datetime(new Date())
+    })
+    await this.model('sys_logininfor').add(data)
   }
 
 

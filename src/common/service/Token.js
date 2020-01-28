@@ -5,6 +5,8 @@
 
 import jwt from 'jsonwebtoken';
 import Uuid from 'uuid'
+import camelcaseKeys from 'camelcase-keys'
+import uaParser from 'ua-parser-js';
 
 export default class extends think.service.base {
 
@@ -35,10 +37,10 @@ export default class extends think.service.base {
    * @param loginUser
    * @returns {Promise<*>}
    */
-  async createToken(loginUser) {
+  async createToken(loginUser, controller) {
     const token = Uuid.v1();
     loginUser.token = token
-    this.setUserAgent(loginUser)
+    await this.setUserAgent(loginUser, controller)
     await this.refreshToken(loginUser)
     const payload = {}
     payload[think.config('LOGIN_USER_KEY')] = token
@@ -70,18 +72,32 @@ export default class extends think.service.base {
     loginUser.loginTime = (new Date()).getTime();
     loginUser.expireTime = loginUser.loginTime + parseInt(think.config('token.tokenExpireTime')) * 60 * 1000
     const userKey = this.getTokenKey(loginUser.token);
-    await GRedis.set(userKey, JSON.stringify(loginUser), 'EX', parseInt(think.config('token.tokenExpireTime')) * 60,)
+    const res = camelcaseKeys(loginUser, { deep: true })
+    await GRedis.set(userKey, JSON.stringify(res), 'EX', parseInt(think.config('token.tokenExpireTime')) * 60,)
   }
 
   /**
    * 设置用户代理信息
    * @param loginUser
+   * @param controller
    */
-  setUserAgent(loginUser) {
-    loginUser.ipaddr = 'ipaddr'
-    loginUser.loginLocation = 'loginLocation'
-    loginUser.browser = 'browser'
-    loginUser.os = 'os'
+  async setUserAgent(loginUser, controller) {
+    loginUser.ipaddr = controller.ip();
+    const header = controller.header('user-agent')
+    const ua = uaParser(header)
+    if (loginUser.ipaddr === '127.0.0.1') {
+      loginUser.loginLocation = '内网ip'
+    } else {
+      const iPService = new (think.service('IpKit'))
+      const res = await iPService.getIpLocation(loginUser.ipaddr)
+      if (res) {
+        loginUser.loginLocation = res
+      } else {
+        loginUser.loginLocation = '未知地区'
+      }
+    }
+    loginUser.browser = ua.browser.name ? ua.browser.name + ' ' + ua.browser.version : 'unknown'
+    loginUser.os = ua.os.name ? ua.os.name + ' ' + ua.os.version : 'unknown'
   }
 
   /**
