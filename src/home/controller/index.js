@@ -11,7 +11,7 @@ import resEnum from '../config/resEnum'
 export default class extends Base {
 
   /**
-   * 登录请求
+   * 请求-登录
    * @returns {Promise<void>}
    */
   async loginPOST({ username, password, code, uuid }) {
@@ -21,6 +21,47 @@ export default class extends Base {
   }
 
 
+  /**
+   * 请求-登录验证码
+   * @returns {Promise<void>}
+   */
+  async captchaImageGET() {
+    // 生成验证码图片和对应字母
+    const { token, buffer } = await captcha({ size: 4, style: -1 })
+    const img = await sharp(buffer).resize(111, 36).toBuffer();
+    // 随机字串 4位
+    const verifyCode = `"${token}"`
+    // 唯一标识
+    const uuid = Uuid.v1().replace(/\-/g, '');
+    const verifyKey = `${think.config('CAPTCHA_CODE_KEY')}${uuid}`
+    // 设置redis
+    await GRedis.set(verifyKey, verifyCode, 'EX', think.config('CAPTCHA_EXPIRATION'))
+
+    const data = {
+      uuid: uuid,
+      img: img.toString('base64')
+    }
+    this.res(data)
+  }
+
+
+  async getInfoGET() {
+    return { state: 'getInfo' }
+  }
+
+  async getRoutersGET() {
+    return { state: 'getRouters' }
+  }
+
+
+  /**
+   * 登录返回token
+   * @param username
+   * @param password
+   * @param code
+   * @param uuid
+   * @returns {Promise<void>}
+   */
   async login(username, password, code, uuid) {
     const verifyKey = `${think.config('CAPTCHA_CODE_KEY')}${uuid}`
     const captcha = await GRedis.get(verifyKey)
@@ -55,6 +96,7 @@ export default class extends Base {
     }
     this.saveLoginInfo(username, this, true, '登录成功').then()
     const tokenService = new (think.service('Token'))
+    // todo user详情 包含dept和roles
     const token = await tokenService.createToken({ user }, this)
     this.res({ token })
   }
@@ -100,36 +142,8 @@ export default class extends Base {
   }
 
 
-  /**
-   * 登录验证码
-   * @returns {Promise<void>}
-   */
-  async captchaImageGET() {
-    // 生成验证码图片和对应字母
-    const { token, buffer } = await captcha({ size: 4, style: -1 })
-    const img = await sharp(buffer).resize(111, 36).toBuffer();
-    // 随机字串 4位
-    const verifyCode = `"${token}"`
-    // 唯一标识
-    const uuid = Uuid.v1().replace(/\-/g, '');
-    const verifyKey = `${think.config('CAPTCHA_CODE_KEY')}${uuid}`
-    // 设置redis
-    await GRedis.set(verifyKey, verifyCode, 'EX', think.config('CAPTCHA_EXPIRATION'))
 
-    const data = {
-      uuid: uuid,
-      img: img.toString('base64')
-    }
-    this.res(data)
-  }
 
-  async getInfoGET() {
-    return { state: 'getInfo' }
-  }
-
-  async getRoutersGET() {
-    return { state: 'getRouters' }
-  }
 
 
 }

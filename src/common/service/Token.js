@@ -22,10 +22,18 @@ export default class extends think.service.base {
   async getLoginUser(controller) {
     let token = this.getToken(controller)
     if (token) {
-      const payLoad = jwt.decode(token, { complete: true });
-      const uuid = payload[think.config('LOGIN_USER_KEY')]
+      const decode = jwt.decode(token, { complete: true });
+      const uuid = decode['payload'][think.config('LOGIN_USER_KEY')]
       const userKey = this.getTokenKey(uuid)
       const userString = await GRedis.get(userKey)
+      if (!userString) {
+        return null
+      }
+      if (userString.indexOf('"permissions":Set') !== -1) {
+        return JSON.parse(userString.replace(/Set\[(")(.*)(")],/, function () {
+          return `"Set[\\"${arguments[2]}\\"]",`
+        }))
+      }
       return JSON.parse(userString)
     }
     return null
@@ -35,6 +43,7 @@ export default class extends think.service.base {
   /**
    * 创建jwt的Token
    * @param loginUser
+   * @param controller
    * @returns {Promise<*>}
    */
   async createToken(loginUser, controller) {
@@ -105,7 +114,7 @@ export default class extends think.service.base {
    * @param controller
    * @returns {Promise<*>}
    */
-  async getToken(controller) {
+  getToken(controller) {
     let token = controller.header('Authorization')
     if (token && token.indexOf('Bearer ') !== -1) {
       token = token.replace('Bearer ', "");

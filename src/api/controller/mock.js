@@ -12,12 +12,15 @@ export default class extends Base {
 
 
   async mock_requestPOST({}, { password }) {
-    // const tokenService = new (think.service('Token'))
+    const tokenService = new (think.service('Token'))
     // const token = await tokenService.createToken({}, this)
     // let result = think.config('error', undefined, 'api')
-    const iPService = new (think.service('IpKit'))
-    const res = await iPService.getIpLocation('222.182.198.231')
-    return res
+    // const iPService = new (think.service('IpKit'))
+    // const res = await iPService.getIpLocation('222.182.198.231')
+    const res = await tokenService.getLoginUser(this)
+    console.log(res.permissions)
+    // this.json(res.permissions)
+    return res.permissions
   }
 
 
