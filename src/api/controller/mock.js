@@ -17,10 +17,11 @@ export default class extends Base {
     // let result = think.config('error', undefined, 'api')
     // const iPService = new (think.service('IpKit'))
     // const res = await iPService.getIpLocation('222.182.198.231')
-    const res = await tokenService.getLoginUser(this)
-    console.log(res.permissions)
+    // const res = await tokenService.getLoginUser(this)
+    // console.log(res.permissions)
     // this.json(res.permissions)
-    return res.permissions
+    const selectUserByUserName = await this.model('user').selectUserByUserName('admin1')
+    return selectUserByUserName
   }
 
 

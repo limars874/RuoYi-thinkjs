@@ -46,7 +46,14 @@ export default class extends Base {
 
 
   async getInfoGET() {
-    return { state: 'getInfo' }
+    const tokenService = new (think.service('Token'))
+    const redisInfoCache = await tokenService.getLoginUser(this)
+    const user = redisInfoCache.user
+    // roles
+
+    // permissions
+    return  user
+
   }
 
   async getRoutersGET() {
@@ -76,7 +83,7 @@ export default class extends Base {
       throw resEnum.userCaptchaError
     }
     // 用户验证
-    const user = await this.model('sys_user').where({ user_name: username }).find();
+    const user = await this.model('sys_user').selectUserByUserName(username)
     if (!user.user_id) {
       this.saveLoginInfo(username, this, false, `登录用户：${username}不存在`).then()
       throw `登录用户：${username}不存在`

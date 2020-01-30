@@ -14,6 +14,7 @@
 import colors from 'colors'
 import crontab from 'node-crontab'
 import Redis from 'ioredis'
+import lodash from 'lodash'
 
 var http = require('http')
 
@@ -152,3 +153,5 @@ global.generateRandomCharCode = function (num) {
   }
   return result
 }
+
+global._ = lodash
