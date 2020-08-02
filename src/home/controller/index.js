@@ -48,7 +48,8 @@ export default class extends Base {
   async getInfoGET() {
     const tokenService = new (think.service('Token'))
     const redisInfoCache = await tokenService.getLoginUser(this)
-    const user = redisInfoCache.user
+    // user
+    const user = redisInfoCache ? redisInfoCache.user : {}
     // roles
 
     // permissions
