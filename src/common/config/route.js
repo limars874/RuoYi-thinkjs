@@ -5,6 +5,9 @@ export default {
   api: {//api
     reg: /^api/
   },
+  system: {//system
+    reg: /^system/
+  },
   // 默认走home
   home: {
     reg: /^(login|getInfo|getRouters|captchaImage)/

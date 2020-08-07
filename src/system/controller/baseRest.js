@@ -45,12 +45,23 @@ export default class extends think.controller.rest {
     return ''
   }
 
+  whiteRequestParam(param) {
+    const whiteList = ['list', 'index']
+    return whiteList.indexOf(param) !== -1
+  }
+
   /**
    * 重写请求方法
    */
   async baseRequest(methodName = 'GET') {
+
     this.id = this.id ? this.id : 'index'
-    let action = this.id + (methodName.toUpperCase())
+    let action
+    if (this.whiteRequestParam(this.id)) {
+      action = this.id + (methodName.toUpperCase())
+    } else {
+      action = 'rest' + (methodName.toUpperCase())
+    }
     if (!this[action] || !think.isFunction(this[action])) {
       return this.failByCode(90000)
     }
