@@ -13,7 +13,7 @@ export default {
     host: '192.168.50.219',
     extend: {}
   },
-  CAPTCHA_CODE_KEY: 'captcha_codes:', // 验证码 redis key
+  CAPTCHA_CODE_KEY: 'captcha_code_key:', // 验证码 redis key
   CAPTCHA_EXPIRATION: 120, // 验证码有效期（秒）
 
   LOGIN_TOKEN_KEY: 'login_tokens:',

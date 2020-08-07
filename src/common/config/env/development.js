@@ -11,7 +11,7 @@ export default {
         port: '3306',
         database: 'ry-vue',
         user: 'root',
-        password: 'limars874',
+        password: '123456',
         prefix: '',
         encoding: 'UTF8MB4_GENERAL_CI',
         log_sql: true,
