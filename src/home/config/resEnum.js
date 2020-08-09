@@ -15,11 +15,15 @@ export default {
   userCaptchaExpire: 2,
   userPasswordNotMatch: 3,
   userPasswordDelete: 4,
+  paramError: 5,
+  CanNotDeleteRole: 6,
   property: {
     1: { msg: '验证码错误' },
     2: { msg: '验证码已失效' },
     3: { msg: '用户不存在/密码错误' },
     4: { msg: '对不起，您的账号已被删除' },
+    5: { msg: '参数错误' },
+    6: { msg: '已分配,不能删除' },
   }
 }
 

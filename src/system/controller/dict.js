@@ -1,6 +1,5 @@
 'use strict';
 import Base from './baseRest.js';
-import resEnum from '../config/resEnum'
 
 import camelcaseKeys from 'camelcase-keys'
 
@@ -9,7 +8,7 @@ export default class extends Base {
 
   async typeGET({ type }) {
     if (!type) {
-      throw resEnum.paramError
+      throw '参数错误'
     }
 
     const where = { status: '0', dict_type: type }

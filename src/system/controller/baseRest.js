@@ -1,4 +1,7 @@
 'use strict'
+import resEnum from '../config/resEnum'
+
+
 
 export default class extends think.controller.rest {
 
@@ -8,8 +11,6 @@ export default class extends think.controller.rest {
 
   __call() {
     let method = this.http.method.toLowerCase()
-    //this.setCorsHeader();
-    //console.log(this.http.headers['access-control-request-method']) ;
     if (method === 'options') {
       console.log('options')
       this.end()
@@ -29,6 +30,13 @@ export default class extends think.controller.rest {
     return super.fail(code, showErrooByCode(code), {})
   }
 
+  failByEnum(enumNum) {
+    return super.fail(500, showErrorByEnum(enumNum), undefined)
+  }
+
+  failByMsg(msg) {
+    return super.fail(500, msg, undefined)
+  }
 
   async __before() {
   }
@@ -45,23 +53,29 @@ export default class extends think.controller.rest {
     return ''
   }
 
-  whiteRequestParam(param) {
-    const whiteList = ['list', 'index']
-    return whiteList.indexOf(param) !== -1
-  }
+
 
   /**
    * 重写请求方法
    */
   async baseRequest(methodName = 'GET') {
-
-    this.id = this.id ? this.id : 'index'
     let action
-    if (this.whiteRequestParam(this.id)) {
-      action = this.id + (methodName.toUpperCase())
+    if (this.http.pathname.indexOf('roleMenuTreeselect') !== -1) {
+      action = 'roleMenuTreeselect' + (methodName.toUpperCase())
     } else {
-      action = 'rest' + (methodName.toUpperCase())
+      const whiteIdLIst = ['list','type']
+
+      if(whiteIdLIst.indexOf(this.id) !== -1){
+        this.id = this.id ? this.id : 'index'
+        action = this.id + (methodName.toUpperCase())
+      } else {
+        action = 'rest' + (methodName.toUpperCase())
+      }
+
     }
+
+    console.log(action)
+
     if (!this[action] || !think.isFunction(this[action])) {
       return this.failByCode(90000)
     }
@@ -70,9 +84,10 @@ export default class extends think.controller.rest {
       this.success(result)
     } catch (e) {
       if (think.isNumber(e)) {
-        return this.failByCode(e)
+        return this.failByEnum(e)
       } else {
-        return this.fail(10000, '未知错误：' + e.toString())
+        return this.failByMsg(e.toString())
+        // return this.fail(10000, '未知错误：' + e.toString())
       }
     }
   }
@@ -100,5 +115,8 @@ export default class extends think.controller.rest {
     }, data))
   }
 
+  errorText(){
+    return resEnum
+  }
 
 }
