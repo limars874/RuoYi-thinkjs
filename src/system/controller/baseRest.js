@@ -1,5 +1,5 @@
 'use strict'
-import resEnum from '../config/resEnum'
+import resEnum from '../../home/config/resEnum.js'
 
 
 
@@ -63,18 +63,15 @@ export default class extends think.controller.rest {
     if (this.http.pathname.indexOf('roleMenuTreeselect') !== -1) {
       action = 'roleMenuTreeselect' + (methodName.toUpperCase())
     } else {
-      const whiteIdLIst = ['list','type']
 
-      if(whiteIdLIst.indexOf(this.id) !== -1){
+      if(this.id && parseInt(this.id)){
+        action = 'rest' + (methodName.toUpperCase())
+      } else {
         this.id = this.id ? this.id : 'index'
         action = this.id + (methodName.toUpperCase())
-      } else {
-        action = 'rest' + (methodName.toUpperCase())
       }
 
     }
-
-    console.log(action)
 
     if (!this[action] || !think.isFunction(this[action])) {
       return this.failByCode(90000)

@@ -46,6 +46,10 @@ export default class extends Base {
   }
 
 
+  /**
+   * 获取用户信息、权限信息、角色信息
+   * @returns {Promise<void>}
+   */
   async getInfoGET() {
     const tokenService = new (think.service('Token'))
     const redisInfoCache = await tokenService.getLoginUser(this)
@@ -62,6 +66,11 @@ export default class extends Base {
 
   }
 
+
+  /**
+   * 获取路由信息
+   * @returns {Promise<void>}
+   */
   async getRoutersGET() {
     // return { state: 'getRouters' }
     this.json({

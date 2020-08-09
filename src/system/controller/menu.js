@@ -5,17 +5,6 @@ import camelcaseKeys from 'camelcase-keys'
 
 export default class extends Base {
 
-  // async getAction() {
-  //   if (this.http.pathname.indexOf('roleMenuTreeselect') !== -1) {
-  //     return await this.roleMenuTreeSelect(this.get(), this.post())
-  //   }
-  //   if (this.id === 'list') {
-  //     return await this.list(this.get(), this.post())
-  //   }
-  //   return await this.restGet(this.get(), this.post())
-  //
-  // }
-
 
   /**
    * list 列表
@@ -54,7 +43,10 @@ export default class extends Base {
     this.res({ total, rows })
   }
 
-
+  /**
+   * 根据role id 返回menu和被选中的menu_id集合
+   * @returns {Promise<void>}
+   */
   async roleMenuTreeselectGET() {
     if (!this.id || !parseInt(this.id)) {
       throw this.errorText().paramError
@@ -73,6 +65,12 @@ export default class extends Base {
 
   }
 
+
+  async  treeselectGET(){
+    const menuData = await this.model('sys_menu').where('1=1').order('parent_id, order_num').select();
+    const menus = this.arr_to_tree(menuData, 0)
+    this.res({data:menus})
+  }
 
   async restGET({}, {}) {
     const where = { role_id: this.id }
