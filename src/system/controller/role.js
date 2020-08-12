@@ -1,6 +1,7 @@
 'use strict';
 import Base from './baseRest.js';
 import camelcaseKeys from 'camelcase-keys'
+import resEnum from "../../home/config/resEnum"
 
 
 export default class extends Base {
@@ -59,6 +60,7 @@ export default class extends Base {
     this.res({ data: res })
   }
 
+
   /**
    * 根据id删除role
    * @returns {Promise<void>}
@@ -67,16 +69,17 @@ export default class extends Base {
     if (!this.id || !parseInt(this.id)) {
       throw this.errorText().paramError
     }
-    const userRoleCount = await this.model('sys_user_role').where({ role_id: this.id }).count();
+
+    const ids = this.id.split('-').map(i => parseInt(i, 10))
+    const userRoleCount = await this.model('sys_user_role').where({ role_id: ['in', ids] }).count();
     if (userRoleCount > 0) {
-      throw '角色已分配，不能删除，请先删除对应用户'
+      throw '有角色已分配用户，不能删除，请先删除对应用户'
     }
 
     const roleDataSql = `select distinct r.role_id, r.role_name, r.role_key, r.role_sort, r.data_scope, r.status, 
      r.del_flag, r.create_time, r.remark from sys_role r left join sys_user_role ur on ur.role_id = r.role_id 
-      left join sys_user u on u.user_id = ur.user_id left join sys_dept d on u.dept_id = d.dept_id where r.role_id = ${this.id}`
+      left join sys_user u on u.user_id = ur.user_id left join sys_dept d on u.dept_id = d.dept_id where r.role_id in (${ids.join(',')})`
     const roleData = await this.model('sys_role').query(roleDataSql)
-
 
     const roleDataIdList = roleData.map(i => i.role_id)
     await this.model('sys_role').where({ role_id: ['in', roleDataIdList] }).update({ del_flag: 2 })
@@ -128,6 +131,66 @@ export default class extends Base {
   }
 
 
+  async indexPUT({}, { deptIds, menuIds, remark, roleKey, roleName, roleSort, status, dataScope, roleId }) {
+    if (!roleId) {
+      throw resEnum.paramError
+    }
+    // check
+    const role = await this.checkRole(roleId)
+    if (role.role_name !== roleName) {
+      await this.checkRoleNameUnique(roleName)
+    }
+    if (role.role_key !== roleKey) {
+      await this.checkRoleKeyUnique(roleKey)
+    }
+
+    // sys_role
+    const tokenService = new (think.service('Token'))
+    const redisInfoCache = await tokenService.getLoginUser(this)
+    const user = redisInfoCache ? redisInfoCache.user : {}
+    const userName = user.userName || 'noName'
+    const updateData = {
+      role_name: roleName,
+      role_key: roleKey,
+      role_sort: roleSort,
+      status: status,
+      remark: remark,
+      update_by: userName,
+      update_time: think.datetime(new Date())
+    }
+    const update = await this.model('sys_role').where({ role_id: roleId }).update(updateData)
+
+    // sys_role_menu
+    await this.model('sys_role_menu').where({ role_id: roleId }).delete()
+    if (menuIds && menuIds.length > 0) {
+      const roleMenuData = menuIds.map(i => {
+        return { role_id: roleId, menu_id: i }
+      })
+      await this.model('sys_role_menu').addMany(roleMenuData)
+    }
+
+    this.res()
+  }
+
+  /**
+   * 检测role
+   * @param roleId
+   * @returns {Promise<{role_id}|*>}
+   */
+  async checkRole(roleId) {
+    const role = await this.model('sys_role').where({ role_id: roleId }).find();
+    if (role.role_id) {
+      return role
+    } else {
+      throw resEnum.paramError
+    }
+  }
+
+  /**
+   * 检测角色名称重复
+   * @param roleName
+   * @returns {Promise<void>}
+   */
   async checkRoleNameUnique(roleName) {
     if (!roleName) {
       throw '角色名称或未填写'
@@ -138,6 +201,11 @@ export default class extends Base {
     }
   }
 
+  /**
+   * 检测角色权限字符重复
+   * @param roleKey
+   * @returns {Promise<void>}
+   */
   async checkRoleKeyUnique(roleKey) {
     if (!roleKey) {
       throw '权限字符或未填写'

@@ -39,6 +39,7 @@ export default class extends think.controller.rest {
   }
 
   async __before() {
+
   }
 
 
@@ -59,11 +60,11 @@ export default class extends think.controller.rest {
    * 重写请求方法
    */
   async baseRequest(methodName = 'GET') {
+
     let action
     if (this.http.pathname.indexOf('roleMenuTreeselect') !== -1) {
       action = 'roleMenuTreeselect' + (methodName.toUpperCase())
     } else {
-
       if(this.id && parseInt(this.id)){
         action = 'rest' + (methodName.toUpperCase())
       } else {
