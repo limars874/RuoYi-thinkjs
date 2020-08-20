@@ -28,12 +28,12 @@ export default class extends Base {
       status
     }, i => _.isUndefined(i) || i === '')
 
-    if(where.role_name){
-      where.role_name = ['like',`%${where.role_name}%`]
+    if (where.role_name) {
+      where.role_name = ['like', `%${where.role_name}%`]
     }
 
-    if(where.role_key){
-      where.role_key = ['like',`%${where.role_key}%`]
+    if (where.role_key) {
+      where.role_key = ['like', `%${where.role_key}%`]
     }
 
     if (beginTime && endTime) {
@@ -79,7 +79,7 @@ export default class extends Base {
     }
 
     const ids = this.id.split('-').map(i => parseInt(i, 10))
-    if(ids.indexOf(1) !== -1){
+    if (ids.indexOf(1) !== -1) {
       throw '不能删除admin'
     }
 
@@ -143,6 +143,44 @@ export default class extends Base {
   }
 
 
+  async dataScopePUT({}, { roleId, dataScope, roleName, roleKey, deptIds }) {
+    this.checkAdminRole(roleId)
+    if (!roleId || !dataScope) {
+      throw resEnum.paramError
+    }
+    // check
+    const role = await this.checkRole(roleId)
+    if (role.role_name !== roleName) {
+      await this.checkRoleNameUnique(roleName)
+    }
+    if (role.role_key !== roleKey) {
+      await this.checkRoleKeyUnique(roleKey)
+    }
+    // 修改角色信息
+    const tokenService = new (think.service('Token'))
+    const redisInfoCache = await tokenService.getLoginUser(this)
+    const user = redisInfoCache ? redisInfoCache.user : {}
+    const userName = user.userName || 'noName'
+    const updateData = {
+      data_scope: dataScope,
+      update_by: userName,
+      update_time: think.datetime(new Date())
+    }
+    await this.model('sys_role').where({ role_id: roleId }).update(updateData)
+
+    // 删除角色与部门关联
+    await this.model('sys_role_dept').where({ role_id: roleId }).delete()
+
+    // 新增角色和部门信息（数据权限）
+    const addData = deptIds.map(i => ({ role_id: roleId, dept_id: i }))
+    if (addData.length > 0) {
+      await this.model('sys_role_dept').addMany(addData)
+    }
+
+    this.res()
+  }
+
+
   async indexPUT({}, { deptIds, menuIds, remark, roleKey, roleName, roleSort, status, dataScope, roleId }) {
     if (!roleId) {
       throw resEnum.paramError
@@ -183,6 +221,13 @@ export default class extends Base {
 
     this.res()
   }
+
+  checkAdminRole(roleId) {
+    if (roleId === 1) {
+      throw '不允许操作超级管理员角色'
+    }
+  }
+
 
   /**
    * 检测role

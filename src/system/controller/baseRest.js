@@ -64,6 +64,8 @@ export default class extends think.controller.rest {
     let action
     if (this.http.pathname.indexOf('roleMenuTreeselect') !== -1) {
       action = 'roleMenuTreeselect' + (methodName.toUpperCase())
+    } else if(this.http.pathname.indexOf('roleDeptTreeselect') !== -1){
+      action = 'roleDeptTreeselect' + (methodName.toUpperCase())
     } else {
       if(this.id && parseInt(this.id)){
         action = 'rest' + (methodName.toUpperCase())
