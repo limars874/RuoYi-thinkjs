@@ -8,3 +8,4 @@ a web backend project by thinkjs and RuoYi's vue-admin
 # todo
 - 纠正：删除user时，没有清除role关系
 - 纠正：role删除为假删除，但判断曾用名又是全判断
+- 角色管理的数据权限接口

@@ -28,6 +28,14 @@ export default class extends Base {
       status
     }, i => _.isUndefined(i) || i === '')
 
+    if(where.role_name){
+      where.role_name = ['like',`%${where.role_name}%`]
+    }
+
+    if(where.role_key){
+      where.role_key = ['like',`%${where.role_key}%`]
+    }
+
     if (beginTime && endTime) {
       beginTime = beginTime + ' 00:00:00'
       endTime = endTime + ' 23:59:59'
@@ -71,6 +79,10 @@ export default class extends Base {
     }
 
     const ids = this.id.split('-').map(i => parseInt(i, 10))
+    if(ids.indexOf(1) !== -1){
+      throw '不能删除admin'
+    }
+
     const userRoleCount = await this.model('sys_user_role').where({ role_id: ['in', ids] }).count();
     if (userRoleCount > 0) {
       throw '有角色已分配用户，不能删除，请先删除对应用户'
