@@ -48,7 +48,7 @@
     "wechat-cash": "0.0.3",
     "wechat-oauth": "^1.2.1",
     "wx-payment": "^1.1.0",
-    "xlsx": "^0.10.9",
+    "xlsx": "^0.17.0",
     "xml2js": "^0.4.19"
   },
   "devDependencies": {
